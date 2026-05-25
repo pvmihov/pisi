@@ -11,6 +11,7 @@ class Command:
         '''Executes the specific command of the object'''
         pass
 
+
 class KeyChordCommand(Command):
     '''Command for pressing a list of keyboard keys'''
 
@@ -34,7 +35,7 @@ class KeyChordCommand(Command):
         self.key_list.reverse()
 
 
-class KeyHoldCommand(Command):
+class KeyHoldForTimeCommand(Command):
     '''Command for holding a key'''
 
     virtual_keyboard : UInput
@@ -55,4 +56,35 @@ class KeyHoldCommand(Command):
         self.virtual_keyboard.write(e.EV_KEY,self.key,0)
         self.virtual_keyboard.syn()
 
+
+class HoldCommand(Command):
+    '''Command with start action and end action'''
+
+    def __init__(self):
+        super().__init__()
+    
+    def start_command(self):
+        pass
+
+    def end_command(self):
+        pass
+
+class KeyHoldCommand(HoldCommand):
+    '''Command for holding key until end'''
+
+    virtual_keyboard : UInput
+    key : int
+
+    def __init__(self, virtual_keyboard : UInput, key : int):
+        super().__init__()
+        self.virtual_keyboard = virtual_keyboard
+        self.key = key
+
+    def start_command(self):
+        self.virtual_keyboard.write(e.EV_KEY,self.key,1)
+        self.virtual_keyboard.syn()
+
+    def end_command(self):
+        self.virtual_keyboard.write(e.EV_KEY,self.key,0)
+        self.virtual_keyboard.syn()
 
