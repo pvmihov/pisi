@@ -28,6 +28,6 @@ class Gesture_Mode(Model):
     def start_inference(self, mp_image : mp.Image, frame_timestamp_ms):
         self.recognizer.recognize_async(mp_image, frame_timestamp_ms)
 
-    def handle_result(self, result , output_image: mp.Image, timestamp_ms: int):
-        pass
+    def release(self):
+        self.recognizer.close()
 

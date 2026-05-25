@@ -37,6 +37,7 @@ class Handler:
         except:
             cap.release()
             cv2.destroyAllWindows()
+            self.model.release()
 
     def handle_result(self, result , output_image: mp.Image, timestamp_ms: int):
         for task in self.tasks:
