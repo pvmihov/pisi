@@ -18,12 +18,17 @@ thumb_down_checker = checkers.GestureChecker("Thumb_Down")
 volume_down_task = tasks.HoldTask(volume_down_command,thumb_down_checker)
 
 alt_tab_command = commands.KeyChordCommand(ui,[e.KEY_LEFTALT,e.KEY_TAB])
-victory_appear_checker = checkers.GestureAppearChecker("Closed_Fist")
-alt_tab_task = tasks.Task(alt_tab_command,victory_appear_checker)
+fist_appear_checker = checkers.GestureAppearChecker("Closed_Fist")
+alt_tab_task = tasks.Task(alt_tab_command,fist_appear_checker)
+
+windows_space_command = commands.KeyChordCommand(ui,[e.KEY_LEFTMETA,e.KEY_D])
+rotate_wrist_checker = checkers.RotateWristChecker("Horizontal")
+windows_space_task = tasks.Task(windows_space_command,rotate_wrist_checker)
 
 
 big_guy = handler.Handler("Gesture")
-big_guy.attack_task(volume_up_task)
-big_guy.attack_task(volume_down_task)
-big_guy.attack_task(alt_tab_task)
+big_guy.attach_task(volume_up_task)
+big_guy.attach_task(volume_down_task)
+big_guy.attach_task(alt_tab_task)
+big_guy.attach_task(windows_space_task)
 big_guy.run()

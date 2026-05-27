@@ -5,7 +5,7 @@ import mediapipe as mp
 from typing import List
 
 class Handler:
-
+    '''Running class which handles the interaction between the camera, the model and the tasks'''
     tasks : List[tsk.Task]
     model : models.Model
 
@@ -16,10 +16,12 @@ class Handler:
         print("Model is loaded")
         self.tasks = []
 
-    def attack_task(self, new_task : tsk.Task):
+    def attach_task(self, new_task : tsk.Task):
+        '''Task is added to the list of tasks that will be run in the process'''
         self.tasks.append(new_task)
 
     def run(self):
+        '''Starts the camera, and loads it into the model and the tasks'''
         cap = cv2.VideoCapture(0)
         if not cap.isOpened():
             print("Error: Could not open webcam.")

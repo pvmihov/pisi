@@ -21,6 +21,7 @@ class Gesture_Mode(Model):
         VisionRunningMode = mp.tasks.vision.RunningMode
         options = GestureRecognizerOptions(
             base_options=BaseOptions(model_asset_path=path_to_model),
+            num_hands = 2,
             running_mode=VisionRunningMode.LIVE_STREAM,
             result_callback=funct_to_call)
         self.recognizer = GestureRecognizer.create_from_options(options)
