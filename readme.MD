@@ -1,5 +1,3 @@
-pisi is a real-time gesture controller for Linux that uses your webcam to turn hand movements into native OS commands
-
 # Core Idea
 
 The most important module in pisi are tasks. They emulate real world structures like "If I close my fist, then press Alt+Tab", or generally "If "clause" , then "command"". That is why tasks have two objects inside of them, a checker and a command, which serve as the clause and the command. Any time a checker is satisfied, the command is performed immediteately. There are also hold tasks, which work with HoldCommands, that have a begin action and stop action. 
@@ -30,7 +28,7 @@ The recognised gestures are:
 
 1. Download or clone the repository
 2. Create the python env. #TODO
-3. Download the Model manually from , or with the following command
+3. Download the Model manually from https://ai.google.dev/edge/mediapipe/solutions/vision/gesture_recognizer#models , or with the following command
 ```bash
 wget -q https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task
 ```
