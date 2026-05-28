@@ -29,7 +29,13 @@ The recognised gestures are:
 # Setting Up
 
 1. Download or clone the repository
-2. Create the python env. #TODO
+2. Create the python env
+```bash
+conda create -n pisi python=3.10
+pip install evdev
+pip install opencv-python
+pip install mediapipe
+```
 3. Download the Model manually from , or with the following command
 ```bash
 wget -q https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task
