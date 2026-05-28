@@ -16,6 +16,8 @@ Current Checkers include:
 1. GestureChecker, receives the name of a gesture and it is satisfied any frame that a gesture appears.
 2. GestureAppearChecker, receives the name of a gesture and it is satisfied on the first frame that it appears.
 3. RotateWristChecker, receives a direction (Horizontal or Vertical) and is satisfied when the wrist is snapped in that direction.
+4. MoveHandChecker, receives a 2d vector for direction and a float for distance and is satisfied when the hand moves at least that distance in terms of the vector in the span of about a second.
+5. SqueezeFingersChecker, receives two names of fingers and is satisfied when the fingers are squeezed together. The 5 fingers are Thumb, Index, Middle, Ring and Pinky.
 
 The recognised gestures are:
 1. Closed fist, name: Closed_Fist
@@ -29,7 +31,13 @@ The recognised gestures are:
 # Setting Up
 
 1. Download or clone the repository
-2. Create the python env. #TODO
+2. Create the python env
+```bash
+conda create -n pisi python=3.10
+pip install evdev
+pip install opencv-python
+pip install mediapipe
+```
 3. Download the Model manually from , or with the following command
 ```bash
 wget -q https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task

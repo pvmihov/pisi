@@ -1,5 +1,6 @@
 import mediapipe as mp
 from typing import Tuple, List, Dict
+import math
 
 class Checker:
     '''Checks for a certain condition'''
@@ -51,7 +52,7 @@ class RotateWristChecker(Checker):
 
     dir : bool #true for horizontal, false for vertical
     track_points : List[int] # the points to track
-    prev_cords : Dict[str,List[List[int]]]
+    prev_cords : Dict[str,List[List[float]]]
     frames_needed : int
 
     def __init__(self, direction : str):
@@ -78,7 +79,6 @@ class RotateWristChecker(Checker):
             present_ind[ hand[0].category_name ] = i
         found_any = False
         for key, value in present_ind.items():
-                #for i in range(0,len(self.track_points)): self.prev_cords[key][i] = []
             if len(self.prev_cords[key][0]) == self.frames_needed:
                 for i in range(0,len(self.track_points)):
                     self.prev_cords[key][i].reverse()
@@ -94,27 +94,129 @@ class RotateWristChecker(Checker):
             if len(self.prev_cords[key][0]) == self.frames_needed:
                 all_fit = True
                 for i in range(0,len(self.track_points)):
-                    if not(self.prev_cords[key][i][0]*self.prev_cords[key][i][self.frames_needed-1]<0):
+                    if not(self.prev_cords[key][i][0]*self.prev_cords[key][i][-1]<0):
                         all_fit = False
                 if all_fit:
                     found_any = True
                     for i in range(0,len(self.track_points)): self.prev_cords[key][i] = []
         return found_any
 
-# class HandMovementChecker(Checker):
-#     '''Checks for moving throughout the screen'''
 
-#     dir : Tuple[float,float] #vector for the moving
-#     dist : float #how much move is required to trigger
+class MoveHandChecker(Checker):
+    '''Checks for a slow movement of the hand in the span of about a second'''
 
+    direction : Tuple[float,float]
+    distance : float
+    prev_cords : Dict[str,List[Tuple[float,float]]]
+    frames_needed : int
+    point_tracked : int
 
-#     def __init__(self, dir : Tuple[float,float], dist : float):
-#         super().__init__()
+    def __init__(self, direction : Tuple[float,float], distance : float):
+        super().__init__()
+        dir_x , dir_y = direction
+        distance_p = math.sqrt(dir_x*dir_x + dir_y*dir_y)
+        self.direction = ( dir_x / distance_p, dir_y / distance_p )
+        self.distance = distance
+        self.point_tracked = 9
+        self.frames_needed = 6
+        self.prev_cords = {
+            'Left' : [],
+            'Right' : []
+        }
 
+    def test_result(self, result):
+        present_ind = {
+            'Left' : -1,
+            'Right' : -1
+        }      
+        for i in range(0,len(result.handedness)):
+            hand = result.handedness[i]
+            present_ind[ hand[0].category_name ] = i
+        found_any = False
+        for key, value in present_ind.items():
+            if len(self.prev_cords[key]) == self.frames_needed:
+                self.prev_cords[key].reverse()
+                self.prev_cords[key].pop()
+                self.prev_cords[key].reverse()
+            if value == -1:
+                self.prev_cords[key].append(None)
+            else:
+                self.prev_cords[key].append( (result.hand_landmarks[value][self.point_tracked].x , result.hand_landmarks[value][self.point_tracked].y ) )
+            if len(self.prev_cords[key]) == self.frames_needed:
+                if self.prev_cords[key][-1] is None or self.prev_cords[key][0] is None: 
+                    continue
+                x_now , y_now = self.prev_cords[key][-1]
+                x_then, y_then = self.prev_cords[key][0]
+                change_x = x_now - x_then
+                change_y = y_now - y_then
+                x_des, y_des = self.direction
+                scalar_mult = x_des * change_x + y_des * change_y
+                if scalar_mult >= self.distance:
+                    found_any = True
+                    self.prev_cords[key].clear()
+        return found_any
+    
 
-#     def test_result(self, result):
-#         if len(result.hand_landmarks)!=0:
-#             print(result.hand_landmarks[0][17])
-#         else:
-#             print('empty')
-#         return False
+class SqueezeFingersChecker(Checker):
+    '''Checks for squeezing of two fingers toghether'''
+
+    found_begin : Dict[str,List[int]]
+    frames_needed : int
+    dist_to_start : int
+    finger_1 : List[int]
+    finger_2 : List[int]
+
+    @classmethod
+    def find_finger(cls, string : str) -> int:
+        if string == 'Thumb':
+            return [3,4]
+        elif string == 'Index':
+            return [7,8]
+        elif string == 'Middle':
+            return [11,12]
+        elif string == 'Ring':
+            return [15,16]
+        elif string == 'Pinky':
+            return [19,20]
+        else:
+            raise Exception(f'{str} is not a valid finger')
+
+    def __init__(self, finger_1 : str, finger_2 : str):
+        super().__init__()
+        self.finger_1 = self.find_finger(finger_1)
+        self.finger_2 = self.find_finger(finger_2)
+        self.dist_to_start = 0.03
+        self.frames_needed = 8
+        self.found_begin = {
+            'Right' : [-10,-10],
+            'Left' : [-10,-10]
+        }
+
+    def test_result(self, result):
+        present_ind = {
+            'Left' : -1,
+            'Right' : -1
+        }      
+        for i in range(0,len(result.handedness)):
+            hand = result.handedness[i]
+            present_ind[ hand[0].category_name ] = i
+        found_any = False
+        for key, value in present_ind.items():
+            if value == -1: continue
+            for i in range(0,2):
+                fin1 = self.finger_1[i]
+                fin2 = self.finger_2[i]
+                x1 = result.hand_world_landmarks[value][fin1].x
+                y1 = result.hand_world_landmarks[value][fin1].y
+                z1 = result.hand_world_landmarks[value][fin1].z
+                x2 = result.hand_world_landmarks[value][fin2].x
+                y2 = result.hand_world_landmarks[value][fin2].y
+                z2 = result.hand_world_landmarks[value][fin2].z
+                dist = math.sqrt((x1-x2)**2+(y1-y2)**2+(z1-z2)**2)
+                #print(dist,self.found_begin[key])
+                if dist >= self.dist_to_start: self.found_begin[key][i] = self.frames_needed
+                elif dist <= self.dist_to_start:
+                    if self.found_begin[key][i] >= 0:
+                        found_any = True
+                        self.found_begin[key][i] = -1
+        return found_any

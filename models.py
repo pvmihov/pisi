@@ -12,7 +12,7 @@ class Model:
 class Gesture_Mode(Model):
     '''Model Recognising Gestures'''
 
-    def __init__(self, path_to_model : str, funct_to_call):
+    def __init__(self, path_to_model : str, funct_to_call, num_hands_to_give : int):
         super().__init__()
         BaseOptions = mp.tasks.BaseOptions
         GestureRecognizer = mp.tasks.vision.GestureRecognizer
@@ -21,7 +21,7 @@ class Gesture_Mode(Model):
         VisionRunningMode = mp.tasks.vision.RunningMode
         options = GestureRecognizerOptions(
             base_options=BaseOptions(model_asset_path=path_to_model),
-            num_hands = 2,
+            num_hands = num_hands_to_give,
             running_mode=VisionRunningMode.LIVE_STREAM,
             result_callback=funct_to_call)
         self.recognizer = GestureRecognizer.create_from_options(options)

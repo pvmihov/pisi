@@ -10,9 +10,9 @@ class Handler:
     model : models.Model
 
 
-    def __init__(self, model_type : str):
+    def __init__(self, model_type : str, num_hands : int):
         if model_type == "Gesture":
-            self.model = models.Gesture_Mode("gesture_recognizer.task",self.handle_result)
+            self.model = models.Gesture_Mode("gesture_recognizer.task",self.handle_result, num_hands)
         print("Model is loaded")
         self.tasks = []
 
