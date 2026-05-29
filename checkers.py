@@ -1,6 +1,8 @@
 import mediapipe as mp
 from typing import Tuple, List, Dict
 import math
+import cv2
+import numpy as np
 
 class Checker:
     '''Checks for a certain condition'''
@@ -220,3 +222,73 @@ class SqueezeFingersChecker(Checker):
                         found_any = True
                         self.found_begin[key][i] = -1
         return found_any
+    
+
+
+class ArgumentChecker(Checker):
+    '''Checker which doesn't return simply true or false, but some sort of result'''
+
+    def __init__(self):
+        super().__init__()
+
+    def test_result(self, result):
+        pass
+
+class LetterRecognitionChecker(ArgumentChecker):
+    '''Recognises if the user is spelling a letter'''
+
+    time_frame : int
+    coordinates : Dict[str,List[Tuple[float,float]]]
+    index_finger : int
+
+    def __init__(self):
+        super().__init__()
+        self.time_frame = 35
+        self.coordinates = {
+            'Left' : [],
+            'Right' : []
+        }
+        self.index_finger = 8
+
+    def test_result(self, result) -> str | bool:
+        present_ind = {
+            'Left' : -1,
+            'Right' : -1
+        }      
+        for i in range(0,len(result.handedness)):
+            hand = result.handedness[i]
+            present_ind[ hand[0].category_name ] = i
+        found_any = False
+        for key, value in present_ind.items():
+            if value == -1:
+                self.coordinates[key].append( (-1,-1) )
+            else:
+                self.coordinates[key].append( (result.hand_landmarks[value][self.index_finger].x,result.hand_landmarks[value][self.index_finger].y) )
+            if len(self.coordinates[key]) > self.time_frame:
+                self.coordinates[key] = self.coordinates[key][1:]
+            if len(self.coordinates[key]) == self.time_frame:
+
+                image = self.turn_cords_to_image(self.coordinates[key])
+                if image is None: continue
+                cv2.imwrite("connected_lines_opencv.png", image)
+                self.coordinates[key].clear()
+        return False
+
+    def turn_cords_to_image(self, coords : List[Tuple[float,float]]):
+        new_cords = []
+        for cord in coords:
+            x,y = cord
+            #print(x)
+            if x==-1: continue
+            new_cords.append((1-x,y))
+        if len(new_cords)< self.time_frame / 2: return None
+        width = 640
+        height = 480
+        image = np.ones((height, width, 3), dtype=np.uint8) * 255
+        scaled_coords = [(int(x * width), int(y * height)) for x, y in new_cords]
+        black_color = (0, 0, 0)
+        thickness = 2
+
+        for point1, point2 in zip(scaled_coords[:-1],scaled_coords[1:]):
+            cv2.line(image, point1, point2, black_color, thickness)
+        return image
