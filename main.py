@@ -29,10 +29,16 @@ windows_space_command = commands.KeyChordCommand(ui,[e.KEY_LEFTMETA,e.KEY_SPACE]
 pinch_fingers = checkers.SqueezeFingersChecker('Thumb','Index')
 windows_space_task = tasks.Task(windows_space_command,pinch_fingers)
 
+write_letter_command = commands.WriteLetterCommand(ui)
+recognise_checker_command = checkers.LetterRecognitionChecker()
+write_letter_task = tasks.ArgumentTask(write_letter_command,recognise_checker_command)
+
 big_guy = handler.Handler("Gesture",num_hands=1)
 big_guy.attach_task(volume_up_task)
 big_guy.attach_task(volume_down_task)
 big_guy.attach_task(alt_tab_task)
 big_guy.attach_task(windows_d_task)
 big_guy.attach_task(windows_space_task)
+big_guy.attach_task(write_letter_task)
+
 big_guy.run()

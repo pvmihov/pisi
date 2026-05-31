@@ -1,6 +1,7 @@
 # Core Idea
 
 The most important module in pisi are tasks. They emulate real world structures like "If I close my fist, then press Alt+Tab", or generally "If "clause" , then "command"". That is why tasks have two objects inside of them, a checker and a command, which serve as the clause and the command. Any time a checker is satisfied, the command is performed immediteately. There are also hold tasks, which work with HoldCommands, that have a begin action and stop action. 
+Additionally there are now argument tasks, which use argument commands and argument checkers. The main idea is the checker doesn't simply return when to fire the command, but an additionall instruction to it (the argument).
 You can play around creating your own Tasks with different checkers and commands. 
 
 # Current Functionalities
@@ -9,6 +10,7 @@ Current Commands include:
 1. KeyChordCommand, receives a collection of keys which are pressed in that order, and immediately released in the reverse order
 2. KeyHoldForTimeCommand, receives a key and a time. Holds the key for that fixed time
 3. KeyHoldCommand, part of HoldCommands, receives a key, which it starts and ends pressing in the two respective functions.
+4. WriteLetterCommand, part of ArgumentCommands, receives an integer, and presses the according letter of the alphabet (0 is a, 12 is m ...)
 
 Current Checkers include:
 1. GestureChecker, receives the name of a gesture and it is satisfied any frame that a gesture appears.
@@ -16,6 +18,7 @@ Current Checkers include:
 3. RotateWristChecker, receives a direction (Horizontal or Vertical) and is satisfied when the wrist is snapped in that direction.
 4. MoveHandChecker, receives a 2d vector for direction and a float for distance and is satisfied when the hand moves at least that distance in terms of the vector in the span of about a second.
 5. SqueezeFingersChecker, receives two names of fingers and is satisfied when the fingers are squeezed together. The 5 fingers are Thumb, Index, Middle, Ring and Pinky.
+6. LetterRecognitionChecker, recognises letters written by fingers in the air. Currently only tracks index finger.
 
 The recognised gestures are:
 1. Closed fist, name: Closed_Fist
@@ -35,8 +38,9 @@ conda create -n pisi python=3.10
 pip install evdev
 pip install opencv-python
 pip install mediapipe
+pip install pytesseract
 ```
-3. Download the Model manually from , or with the following command
+3. Download the Model manually from https://ai.google.dev/edge/mediapipe/solutions/vision/gesture_recognizer , or with the following command
 ```bash
 wget -q https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task
 ```
@@ -44,4 +48,12 @@ wget -q https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gestu
 After setting, you have to run the main program with sudo
 ```bash
 sudo $(which python) main.py
+```
+
+# Setting Letter Recognition
+
+To use the letter recognition filters, you additionally need to install the Teseract Optical Character Recognition on your system.
+```bash
+sudo apt update
+sudo apt install tesseract-ocr
 ```

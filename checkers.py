@@ -3,6 +3,9 @@ from typing import Tuple, List, Dict
 import math
 import cv2
 import numpy as np
+import queue
+import threading
+import pytesseract
 
 class Checker:
     '''Checks for a certain condition'''
@@ -240,17 +243,50 @@ class LetterRecognitionChecker(ArgumentChecker):
     time_frame : int
     coordinates : Dict[str,List[Tuple[float,float]]]
     index_finger : int
+    result : int
+    image_queue : queue.Queue
 
     def __init__(self):
         super().__init__()
-        self.time_frame = 35
+        #todo implement different timeframes, and different fingers
+        self.time_frame = 70
         self.coordinates = {
             'Left' : [],
             'Right' : []
         }
         self.index_finger = 8
+        self.result = -1
+        self.image_queue = queue.Queue()
+        worker_thread = threading.Thread(
+            target=self.tesseract_worker, 
+            args=(self.image_queue, self.parse_result), 
+            daemon=True
+        )
+        worker_thread.start()
 
-    def test_result(self, result) -> str | bool:
+    def tesseract_worker(self, img_queue : queue.Queue, callback_function):
+         custom_config = '--psm 10 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+         while True:
+            img = img_queue.get()
+            try:
+                text = pytesseract.image_to_string(img, config=custom_config).strip()
+                if text:
+                    callback_function(text)
+            except Exception as e:
+                print(f"OCR Error: {e}")
+            img_queue.task_done()
+
+    def parse_result(self, text : str):
+        #print(text)
+        if len(text) != 1:
+            self.result = -1
+        elif ord(text[0]) >= ord('a'):
+            self.result = ord(text[0]) - ord('a')
+        else:
+            self.result = ord(text[0]) - ord('A')
+        #print(self.result)
+
+    def test_result(self, result) -> int | bool:
         present_ind = {
             'Left' : -1,
             'Right' : -1
@@ -260,6 +296,11 @@ class LetterRecognitionChecker(ArgumentChecker):
             present_ind[ hand[0].category_name ] = i
         found_any = False
         for key, value in present_ind.items():
+            #if everything is -1,-1 to clear
+            found_not_minusone = False
+            for x,y in self.coordinates[key]:
+                if x!=-1 or y!=-1: found_not_minusone = True
+            if not found_not_minusone: self.coordinates[key].clear()
             if value == -1:
                 self.coordinates[key].append( (-1,-1) )
             else:
@@ -269,10 +310,15 @@ class LetterRecognitionChecker(ArgumentChecker):
             if len(self.coordinates[key]) == self.time_frame:
 
                 image = self.turn_cords_to_image(self.coordinates[key])
-                if image is None: continue
-                cv2.imwrite("connected_lines_opencv.png", image)
+                if image is None:
+                    continue
+                #cv2.imwrite("connected_lines_opencv.png", image)
+                self.image_queue.put(image)
                 self.coordinates[key].clear()
-        return False
+        if self.result == -1: return False
+        old_res = self.result
+        self.result = -1
+        return old_res
 
     def turn_cords_to_image(self, coords : List[Tuple[float,float]]):
         new_cords = []
@@ -287,7 +333,7 @@ class LetterRecognitionChecker(ArgumentChecker):
         image = np.ones((height, width, 3), dtype=np.uint8) * 255
         scaled_coords = [(int(x * width), int(y * height)) for x, y in new_cords]
         black_color = (0, 0, 0)
-        thickness = 2
+        thickness = 20
 
         for point1, point2 in zip(scaled_coords[:-1],scaled_coords[1:]):
             cv2.line(image, point1, point2, black_color, thickness)

@@ -88,3 +88,31 @@ class KeyHoldCommand(HoldCommand):
         self.virtual_keyboard.write(e.EV_KEY,self.key,0)
         self.virtual_keyboard.syn()
 
+
+class ArgumentCommand(Command):
+    '''Command which isn't just trigered to execute, but receives an argument supporting its action'''
+
+    def __init__(self):
+        super().__init__()
+
+    def do_command(self, argument):
+        pass
+
+class WriteLetterCommand(ArgumentCommand):
+    '''Command which receives an integer from the alphabet and presses it'''
+
+    virtual_keyboard : UInput
+    letters : list
+
+    def __init__(self, ui : UInput):
+        super().__init__()
+        self.virtual_keyboard = ui
+        self.letters = [e.KEY_A,e.KEY_B,e.KEY_C,e.KEY_D,e.KEY_E,e.KEY_F,e.KEY_G,e.KEY_H,e.KEY_I,e.KEY_J,e.KEY_K,e.KEY_L,e.KEY_M,e.KEY_N,e.KEY_O,e.KEY_P,
+                        e.KEY_Q,e.KEY_R,e.KEY_S,e.KEY_T,e.KEY_U,e.KEY_V,e.KEY_W,e.KEY_X,e.KEY_Y,e.KEY_Z]
+
+    def do_command(self, argument : int):
+        '''Presses A + argument'''
+        self.virtual_keyboard.write(e.EV_KEY,self.letters[argument],1)
+        self.virtual_keyboard.syn()
+        self.virtual_keyboard.write(e.EV_KEY,self.letters[argument],0)
+        self.virtual_keyboard.syn()        
