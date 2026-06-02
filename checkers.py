@@ -6,6 +6,7 @@ import numpy as np
 import queue
 import threading
 import pytesseract
+from evdev import UInput
 
 class Checker:
     '''Checks for a certain condition'''
@@ -338,3 +339,45 @@ class LetterRecognitionChecker(ArgumentChecker):
         for point1, point2 in zip(scaled_coords[:-1],scaled_coords[1:]):
             cv2.line(image, point1, point2, black_color, thickness)
         return image
+    
+class FingerPointMouseChecker(ArgumentChecker):
+
+    finger_front : int
+    mouse : UInput
+    seen_mouse : bool
+    start_figner : Tuple[float]
+    resolution : Tuple[int,int]
+
+    def __init__(self, mouse : UInput, resolution : Tuple[int,int]):
+        super().__init__()
+        self.mouse = mouse
+        self.finger_front = 8
+        self.seen_mouse = False
+        self.start_figner = (-1,-1)
+        self.resolution = resolution
+
+    def test_result(self, result):
+        if len(result.handedness)!=1:
+            self.start_figner = (-1,-1)
+            self.seen_mouse = False
+            return False
+        if not self.seen_mouse:
+            self.seen_mouse = True
+            self.start_figner = (result.hand_landmarks[0][self.finger_front].x,result.hand_landmarks[0][self.finger_front].y)
+            return False
+        else:
+            x,y = self.start_figner
+            assert(x!=-1)
+            assert(y!=-1)
+            new_x = result.hand_landmarks[0][self.finger_front].x
+            new_y = result.hand_landmarks[0][self.finger_front].y
+            diff_x = x-new_x
+            diff_y = y-new_y
+            reso_x , reso_y = self.resolution
+            result_x = int(reso_x * diff_x)
+            result_y = -1*int(reso_y * diff_y)
+            if abs(result_x) > 15 or abs(result_y) > 15:
+                self.start_figner = (new_x,new_y)
+                return (result_x,result_y)
+            else:
+                return False

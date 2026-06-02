@@ -1,5 +1,5 @@
 from evdev import UInput, ecodes as e
-from typing import List
+from typing import List, Tuple
 import time
 
 class Command:
@@ -55,6 +55,22 @@ class KeyHoldForTimeCommand(Command):
         time.sleep(self.hold_time)
         self.virtual_keyboard.write(e.EV_KEY,self.key,0)
         self.virtual_keyboard.syn()
+
+class MouseClick(Command):
+    '''UNSTABLE!!!!!!!!!!!!!!!!!! Command which clicks the mouse'''
+
+    virtual_mouse : UInput
+
+    def __init__(self, virtual_mouse : UInput):
+        super().__init__()
+        self.virtual_mouse = virtual_mouse
+
+    def do_command(self):
+        self.virtual_mouse.write(e.EV_KEY, e.BTN_LEFT, 1)
+        self.virtual_mouse.syn()
+        time.sleep(0.05)
+        self.virtual_mouse.write(e.EV_KEY, e.BTN_LEFT, 0)
+        self.virtual_mouse.syn()
 
 
 class HoldCommand(Command):
@@ -116,3 +132,20 @@ class WriteLetterCommand(ArgumentCommand):
         self.virtual_keyboard.syn()
         self.virtual_keyboard.write(e.EV_KEY,self.letters[argument],0)
         self.virtual_keyboard.syn()        
+
+class MoveMouseCommand(ArgumentCommand):
+    '''COmmand which receives a tuple of points and moves the mouse there'''
+
+    virtual_mouse : UInput
+
+    def __init__(self, mouse : UInput):
+        super().__init__()
+        self.virtual_mouse = mouse
+
+    def do_command(self, argument : Tuple[int,int]):
+        x,y = argument
+        self.virtual_mouse.write(e.EV_REL, e.REL_X, x)
+        self.virtual_mouse.write(e.EV_REL, e.REL_Y, y)
+        self.virtual_mouse.write(e.EV_SYN, e.SYN_REPORT, 0)
+    
+    
