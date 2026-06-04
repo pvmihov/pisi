@@ -9,6 +9,13 @@ import handler
 ui = UInput()
 time.sleep(0.5)
 
+mouse_capabilities = {
+    e.EV_REL: [e.REL_X, e.REL_Y, e.REL_WHEEL],
+    e.EV_KEY: [e.BTN_LEFT, e.BTN_RIGHT, e.BTN_MIDDLE],
+}
+
+mouse = UInput(mouse_capabilities, bustype=e.BUS_USB)
+
 volume_up_command = commands.KeyHoldCommand(ui,e.KEY_VOLUMEUP)
 thumb_up_checker = checkers.GestureChecker("Thumb_Up")
 volume_up_task = tasks.HoldTask(volume_up_command,thumb_up_checker)
@@ -40,5 +47,6 @@ big_guy.attach_task(alt_tab_task)
 big_guy.attach_task(windows_d_task)
 big_guy.attach_task(windows_space_task)
 big_guy.attach_task(write_letter_task)
-
+big_guy.attach_task(tasks.Task(commands.MouseClick(mouse),checkers.SqueezeFingersChecker('Thumb','Middle')))
+big_guy.attach_task(tasks.ArgumentTask(commands.MoveMouseCommand(mouse),checkers.FingerPointMouseChecker(mouse,(1920,1080))))
 big_guy.run()
