@@ -50,6 +50,30 @@ After setting, you have to run the main program with sudo
 sudo $(which python) main.py
 ```
 
+## Simple UI Launcher
+
+There is also a simple launcher UI with:
+1. Add Task
+2. Remove Task
+3. Launch
+4. Stop
+
+Run it with:
+```bash
+sudo $(which python) ui_launcher.py
+```
+
+The UI stores tasks in `tasks.json`, so your list is persistent between runs.
+
+To add new command/checker types in a reusable way, extend:
+1. `COMMAND_REGISTRY` in `ui_launcher.py`
+2. `CHECKER_REGISTRY` in `ui_launcher.py`
+
+Each registry entry defines:
+1. UI label
+2. Parameter schema
+3. Factory function for building the real object
+
 # Setting Letter Recognition
 
 To use the letter recognition filters, you additionally need to install the Teseract Optical Character Recognition on your system.
